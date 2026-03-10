@@ -17,4 +17,12 @@ Este proyecto permite practicar programación orientada a objetos, lógica de ma
 - Java
 - Swing
 - Programación orientada a objetos (POO)
- 
+
+## Instalación y ejecución
+1. Clonar el repositorio:
+2. 2. Abrir el proyecto en tu IDE favorito (Eclipse, IntelliJ, NetBeans, etc.)  
+3. Ejecutar la clase principal `Main.java` para iniciar el juego
+
+**Opción rápida:**  
+- Puedes descargar el proyecto directamente como **ZIP** desde GitHub y descomprimirlo.  
+- Dentro del ZIP están todas las clases necesarias para ejecutar el juego directamente en tu IDE.  
