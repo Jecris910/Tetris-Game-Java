@@ -1,0 +1,625 @@
+package paula2;
+
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.io.IOException;
+
+public class Practica_Final {
+    
+    // declaramos atributos
+    
+    JFrame ventana;
+    Container panelContenidos;
+    
+    JPanel panelBotones = new JPanel(); 
+    JPanel panelMenus = new JPanel();;
+    JMenuBar barraMenu = new JMenuBar();;
+    JMenu menu = new JMenu("MENÚ");
+    JPanel panelJuego = new JPanel();
+    JPanel panelInterfaces = new JPanel();
+    JPanel interfaz0 = new JPanel();
+    JPanel interfaz1 = new JPanel();
+    JPanel interfaz2 = new JPanel();
+    JPanel interfaz3 = new JPanel();
+    private final Tablero tablero = new Tablero();
+    
+    JPanel panelDatos = new JPanel();
+    JTextField jugador2 = new JTextField();
+    JTextField puntuacion2 = new JTextField();
+    
+    JTextArea historialPartida = new JTextArea();
+    
+    JProgressBar barraTemporal = new JProgressBar();  
+    int valorMinimo = 0;
+    int valorMaximo = 100;
+    Timer cronometro;
+    
+    boolean partidaFinalizada = true;
+    String nombre_jugador = "";
+    int puntuacion;
+    int formaEliminada = 1, rotarForma = -1, nuevaForma = -5, tiempoPartida = 10;
+    
+    Color blanco = new Color (255, 255, 255);
+    Color negro = new Color (0, 0, 0);
+    Color azul = new Color (70, 209, 170);
+    Color naranja = new Color (229, 138, 71);
+    Color rojo = new Color (218, 97, 86);
+    Color verde = new Color (141, 213, 77);
+    Color amarillo = new Color (255, 192, 77);
+    
+    Font fuente1 = new Font("Inter", Font.BOLD, 13);
+    Font fuente2 = new Font("Inter", Font.BOLD, 20);
+    
+    private boolean DESPLAZAMIENTO = false;
+    private static final int COORDENADA_X_INICIAL = 755, COORDENADA_Y_INICIAL = 205;
+
+    public static void main(String[] args) {
+        new Practica_Final().metodoPrincipal();
+    }
+    
+    public void metodoPrincipal() {
+        ventana = new JFrame("PRÁCTICA FINAL");
+        
+        panelContenidos = ventana.getContentPane();
+        panelContenidos.setLayout(new BorderLayout());
+        
+        ///////////////////////////////////////////////////////////////////////
+        
+        interfaz(panelContenidos);
+        
+        ///////////////////////////////////////////////////////////////////////
+        ventana.setVisible(true);
+        ventana.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+        ventana.setLocationRelativeTo(null);
+        ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+    
+    private void interfaz(Container panelContenidos){
+        
+        // BARRA MENU
+        panelMenus = new JPanel();
+        panelMenus.setLayout(new BorderLayout());
+        panelContenidos.add(panelMenus, BorderLayout.NORTH);
+        
+        barraMenu = new JMenuBar();
+        barraMenu.setBackground(blanco);
+        panelMenus.add(barraMenu, BorderLayout.NORTH);
+        menu = new JMenu("MENÚ");
+        menu.setForeground(negro);
+        menu.setFont(fuente1);
+        barraMenu.add(menu);
+        
+        String [] etiquetasMenu = {"NUEVA PARTIDA", "CONFIGURACIÓN", "HISTORIAL", "INFORMACIÓN", "SALIR"};
+        Color [] colores = {azul, naranja, rojo, verde, amarillo};
+        JMenuItem [] menuGeneral = new JMenuItem[etiquetasMenu.length];
+        for (int i=0; i < etiquetasMenu.length; i++){
+            menuGeneral[i] = new JMenuItem(etiquetasMenu[i]);
+            menuGeneral[i].setBackground(blanco);
+            menuGeneral[i].setForeground(colores[i]);
+            menuGeneral[i].setFont(fuente1);
+            menuGeneral[i].addActionListener(new GestorBotones());
+            menu.add(menuGeneral[i]);
+        }
+
+        // JTOOLBAR
+        JButton iconoNuevaPartida = new JButton(new ImageIcon("imagenes/iconoNuevaPartida.jpg"));
+        iconoNuevaPartida.setActionCommand("NUEVA PARTIDA");
+        iconoNuevaPartida.setBackground(azul);
+        iconoNuevaPartida.addActionListener(new GestorBotones());
+        
+        JButton iconoConfiguracion = new JButton(new ImageIcon("imagenes/iconoConfiguracion.jpg"));
+        iconoConfiguracion.setActionCommand("CONFIGURACIÓN");
+        iconoConfiguracion.setBackground(naranja);
+        iconoConfiguracion.addActionListener(new GestorBotones());
+        
+        JButton iconoHistorial = new JButton(new ImageIcon("imagenes/iconoHistorial.jpg"));
+        iconoHistorial.setActionCommand("HISTORIAL");
+        iconoHistorial.setBackground(rojo);
+        iconoHistorial.addActionListener(new GestorBotones());
+        
+        JButton iconoInformacion = new JButton(new ImageIcon("imagenes/iconoInformacion.jpg"));
+        iconoInformacion.setActionCommand("INFORMACIÓN");
+        iconoInformacion.setBackground(verde);
+        iconoInformacion.addActionListener(new GestorBotones());
+        
+        JButton iconoSalir = new JButton(new ImageIcon("imagenes/iconoSalir.jpg"));
+        iconoSalir.setActionCommand("SALIR");
+        iconoSalir.setBackground(amarillo);
+        iconoSalir.addActionListener(new GestorBotones());
+        
+        JToolBar barraHerramientas = new JToolBar();
+        barraHerramientas.setFloatable(false);
+        barraHerramientas.setBackground(blanco);
+        barraHerramientas.add(iconoNuevaPartida);
+        barraHerramientas.add(iconoConfiguracion);
+        barraHerramientas.add(iconoHistorial);
+        barraHerramientas.add(iconoInformacion);
+        barraHerramientas.add(iconoSalir);
+        panelMenus.add(barraHerramientas, BorderLayout.CENTER);
+
+        
+        // PANEL BOTONES 
+        panelBotones = new JPanel();
+        panelBotones.setLayout(new GridLayout(0,1));
+        panelContenidos.add(panelBotones, BorderLayout.WEST);
+        
+        String [] etiquetasBotones = {"NUEVA PARTIDA", "CONFIGURACIÓN", "HISTORIAL", "INFORMACIÓN", "SALIR"};
+        JButton [] botones = new JButton [etiquetasBotones.length];
+        for (int i=0; i<etiquetasBotones.length; i++){
+            botones[i] = new JButton(etiquetasBotones[i]);
+            botones[i].setBackground(colores[i]);
+            botones[i].setBorder(BorderFactory.createLineBorder(blanco,1));
+            botones[i].setForeground(blanco);
+            botones[i].setFont(fuente1);
+            botones[i].addActionListener(new GestorBotones());
+            panelBotones.add(botones[i]);
+        }       
+        
+        
+        // PANEL INTERFACES
+        panelInterfaces = new JPanel();
+        panelInterfaces.setLayout(new CardLayout());
+        panelContenidos.add(panelInterfaces,BorderLayout.CENTER);
+        
+        // interfaz vacía para la pantalla de inicio del juego 
+        interfaz0 = new JPanel();
+        interfaz0.setBackground(blanco);
+        panelInterfaces.add(interfaz0, "PANEL 0");
+        
+        JLabel logo = new JLabel(new ImageIcon("imagenes/TETRIS.jpg"));
+        interfaz0.add(logo);
+        
+        // interfaz del juego en curso
+        interfaz1 = new JPanel();
+        interfaz1.setLayout(new BorderLayout());
+        
+        panelJuego.setLayout(new BorderLayout());
+        panelJuego.setBackground(amarillo);
+        interfaz1.add(panelJuego, BorderLayout.CENTER);
+        
+        panelJuego.add(tablero,BorderLayout.CENTER);
+        
+        eventosTablero();
+        
+        panelDatos = new JPanel();
+        panelDatos.setLayout(new GridLayout(1,0));
+        panelDatos.setBackground(blanco);
+        panelJuego.add(panelDatos, BorderLayout.SOUTH);
+        
+        JLabel jugador1 = new JLabel("   JUGADOR");
+        jugador1.setForeground(naranja);
+        jugador1.setFont(fuente2);
+        panelDatos.add(jugador1);
+        jugador2 = new JTextField();
+        jugador2.setEditable(false);
+        jugador2.setHorizontalAlignment(JTextField.RIGHT);
+        jugador2.setForeground(amarillo);
+        jugador2.setBackground(blanco);
+        jugador2.setFont(fuente2);
+        panelDatos.add(jugador2);
+        JLabel puntuacion1 = new JLabel("   PUNTUACIÓN");
+        puntuacion1.setForeground(naranja);
+        puntuacion1.setFont(fuente2);
+        panelDatos.add(puntuacion1);
+        puntuacion2 = new JTextField();
+        puntuacion2.setEditable(false);
+        puntuacion2.setHorizontalAlignment(JTextField.RIGHT);
+        puntuacion2.setForeground(amarillo);
+        puntuacion2.setBackground(blanco);
+        puntuacion2.setFont(fuente2);
+        panelDatos.add(puntuacion2);
+        
+        JPanel panelFuncionalidades = new JPanel();
+        panelFuncionalidades.setLayout(new GridLayout(0,1));
+        panelJuego.add(panelFuncionalidades, BorderLayout.EAST);
+
+        JButton botonRotarForma = new JButton(new ImageIcon("imagenes/iconoBotonRotar.jpg"));
+        botonRotarForma.setActionCommand("ROTAR FORMA");
+        botonRotarForma.setBackground(blanco);
+        botonRotarForma.addActionListener(new GestorBotones());
+        panelFuncionalidades.add(botonRotarForma);
+        
+        JButton botonNuevaForma = new JButton(new ImageIcon("imagenes/iconoBotonNuevaForma.jpg"));
+        botonNuevaForma.setActionCommand("NUEVA FORMA");
+        botonNuevaForma.setBackground(blanco);
+        botonNuevaForma.addActionListener(new GestorBotones());
+        panelFuncionalidades.add(botonNuevaForma);
+        
+        JPanel panelTiempo = new JPanel();
+        panelTiempo.setLayout(new BorderLayout());
+        interfaz1.add(panelTiempo, BorderLayout.SOUTH);
+        
+        // barra de tiempo     
+        barraTemporal=new JProgressBar();    
+        barraTemporal.setMinimum(valorMinimo);
+        barraTemporal.setMaximum(valorMaximo);
+        barraTemporal.setValue(0);
+        barraTemporal.setStringPainted(true);
+        barraTemporal.setPreferredSize(new Dimension(500,40));
+        barraTemporal.setForeground(rojo);
+        barraTemporal.setBackground(verde);
+        panelTiempo.add(barraTemporal, BorderLayout.CENTER);
+        panelInterfaces.add(interfaz1,"PANEL 1");
+        
+        //interfaz de información
+        JTextArea informacion = new JTextArea("""
+                                              ESTA APLICACIÓN HA SIDO REALIZADA EN EL CONTEXTO DE LA ASIGNATURA DE PROGRAMACIÓN II 
+                                              DEL PRIMER CURSO DE LOS ESTUDIOS DE INGENIERÍA INFORMÁTICA DE LA UNIVERSIDAD DE 
+                                              LES ILLES BALEARS PARA EL CURSO ACADÉMICO 2023-24. 
+                                              REPRESENTA LA PRÁCTICA QUE HAN DE REALIZAR LOS ESTUDIANTES DE LA ASIGNATURA MENCIONADA. 
+                                              LOS OBJETIVOS DE ESTA PRÁCTICA PASAN POR TRABAJAR CON UN ENTORNO GRÁFICO E INTERACTIVO 
+                                              UTILIZANDO LAS PRESENTACIONES QUE OFRECEN LAS LIBRERIAS GRÁFICAS DE JAVA Y LA APLICACIÓN 
+                                              DE LOS CONCEPTOS DE OBJETOS Y TIPOS DE DATOS ABSTRACTOS CORRESPONDIENTES A LA 
+                                              PROGRAMACIÓN ORIENTADA A OBJETOS""");
+        informacion.setPreferredSize(new Dimension(725, 1500));
+        informacion.setFont(fuente1);
+        informacion.setForeground(naranja);
+        interfaz2.add(informacion);
+        interfaz2.setBackground(blanco);
+        panelInterfaces.add(interfaz2,"PANEL 2");
+        
+        // interfaz historial 
+        interfaz3.setLayout(new BorderLayout());
+        interfaz3.setBackground(blanco);
+        
+        JTextField titulo = new JTextField("HISTORIAL");
+        titulo.setFont(fuente1);
+        titulo.setForeground(blanco);
+        titulo.setBackground(azul);
+        titulo.setEditable(false);
+        titulo.setHorizontalAlignment(JTextField.CENTER);
+        interfaz3.add(titulo, BorderLayout.NORTH);
+        
+        historialPartida.setPreferredSize(new Dimension(725, 1500));
+        historialPartida.setFont(fuente1);
+        historialPartida.setForeground(azul);
+        interfaz3.add(historialPartida, BorderLayout.CENTER);
+        panelInterfaces.add(interfaz3, "PANEL 3");
+    }
+    
+    class GestorBotones implements ActionListener{       
+        @Override
+        public void actionPerformed(ActionEvent evento) {
+            CardLayout local = (CardLayout)(panelInterfaces.getLayout());
+            // GET SOURCE
+            String literal = evento.getActionCommand();
+            switch (literal){
+                case "NUEVA PARTIDA" -> {
+                    if(partidaFinalizada == true){
+                        tablero.borrar();
+                        tablero.setInsercion(false);
+                        String[] literalesNuevaPartida = {"NOMBRE JUGADOR"};
+                        literalesNuevaPartida = new LTGraficos(ventana,literalesNuevaPartida).getDatosTexto();
+                        if (literalesNuevaPartida!=null) {
+                            nombre_jugador = literalesNuevaPartida[0];
+                                                
+                            jugador2.setText(nombre_jugador + "   ");
+                            puntuacion2.setText(String.valueOf(puntuacion) + " puntos   ");
+                        }
+                        if (!"".equals(nombre_jugador)){
+                            local.show(panelInterfaces, "PANEL 1");
+                            // delay tiempoPartida*1000 -> tarda tiempoPartida en avanzar un uno porciento
+                            cronometro = new Timer(tiempoPartida*10,new GestorTiempo());
+                            cronometro.start();
+                            partidaFinalizada = false;
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null,"ANTES DEBES TERMINAR LA PARTTIDA EN CURSO");
+                    }                    
+                }
+                
+                case "ROTAR FORMA" -> {
+                    tablero.rotarForma();
+                    puntuacion = puntuacion + rotarForma;
+                    // actualizamos el valor que se muestra 
+                    puntuacion2.setText(String.valueOf(puntuacion) + " puntos   ");
+                    panelJuego.repaint();
+                }
+                
+                case "NUEVA FORMA" -> {
+                    tablero.cambiarForma();
+                    puntuacion = puntuacion + nuevaForma;
+                    // actualizamos el valor que se muestra 
+                    puntuacion2.setText(String.valueOf(puntuacion) + " puntos   ");
+                    panelJuego.repaint();
+                }
+                    
+                case "CONFIGURACIÓN" -> {
+                    if(partidaFinalizada == true){
+                        String[] menu = {"CONFIGURACIÓN ESPECÍFICA JUEGO", "MODIFICAR TIEMPO PARTIDA","NADA"};
+                        int opcion;
+                        UIManager.put("OptionPane.messageForeground", java.awt.Color.BLACK);
+                        do {
+                            opcion = JOptionPane.showOptionDialog(null,
+                                    "¿QUÉ DESEA REALIZAR?",
+                                    "CONFIGURACIÓN",
+                                    JOptionPane.YES_NO_CANCEL_OPTION,
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    menu,
+                                    menu[0]);
+                        
+                            switch (opcion){
+                                case 0 -> {
+                                    String[] literalesConfiguracion1 = {"PUNTUACIÓN CASILLAS FORMAS ELIMINADAS [1p]",
+                                        "PUNTUACIÓN ROTAR FORMA [-1p]",
+                                        "PUNTUACIÓN NUEVA FORMA [-5p]",
+                                        "IMAGEN CASILLAS FORMAS [verde.JPG]"};
+                                    literalesConfiguracion1 = new LTGraficos(ventana,literalesConfiguracion1, false).getDatosTexto();
+                                    if (literalesConfiguracion1[0]!=null){
+                                        try {
+                                            formaEliminada = Integer.parseInt(literalesConfiguracion1[0]);
+                                        } catch (NumberFormatException error){
+                                        }
+                                    }
+                                    if (literalesConfiguracion1[1]!=null){
+                                        try {
+                                            rotarForma = Integer.parseInt(literalesConfiguracion1[1]);
+                                        } catch (NumberFormatException error){
+                                        }
+                                    }
+                                    if (literalesConfiguracion1[2]!=null){
+                                        try {
+                                            nuevaForma = Integer.parseInt(literalesConfiguracion1[2]);
+                                            System.out.println(nuevaForma);
+                                        } catch (NumberFormatException error){
+                                        }
+                                    }
+                                    opcion = -1;
+                                }
+                                case 1 -> {
+                                    String[] literalesConfiguracion2 = {"TIEMPO DE PARTIDA [30 segundos]"};
+                                    literalesConfiguracion2 = new LTGraficos(ventana,literalesConfiguracion2,false).getDatosTexto();
+                                    if (literalesConfiguracion2[0]!=null){
+                                        try {
+                                            tiempoPartida = Integer.parseInt(literalesConfiguracion2[0]);
+                                            System.out.println(tiempoPartida);
+                                        } catch (NumberFormatException error){
+                                        }
+                                    }
+                                    opcion = -1;
+                                }
+                                case 2 -> opcion = -1;
+                            }
+                        }while(opcion != (- 1) );
+                    } else {
+                        JOptionPane.showMessageDialog(null,"ANTES DEBES TERMINAR LA PARTTIDA EN CURSO");
+                    }
+                }
+                    
+                case "HISTORIAL" -> {
+                    if(partidaFinalizada == true){
+                        local.show(panelInterfaces, "PANEL 3");
+                        // leemos el fichero del historial y lo mostramos 
+                        Historial historial;
+                        //HistorialObjetoFicherosLectura ficheroLectura;
+                        FicheroElementoInOut fichero;
+                        String todoHistorial = "";
+                        try{
+                            fichero = new FicheroElementoInOut("partidasTetrisUIB.dat");
+                            try{
+                                historial = fichero.lectura();
+                                while(historial!=null){
+                                    System.out.println(historial.toString());
+                                    todoHistorial = todoHistorial + historial + "\n";
+                                    // leemos el siguiente elemento
+                                    historial = fichero.lectura();
+                                }
+                            }catch (Exception error) {
+                                System.err.println("ERROR: FICHERO INEXISTENTE");
+                            }finally {
+                                try {
+                                    //cierre del enlace con el fichero
+                                    fichero.cierre();
+                                }catch (IOException error) {
+                                    System.out.println("ERROR EN EL CIERRE DEL FICHERO");
+                                }
+                            }   
+                        }catch (Exception error){
+                            System.err.println("ERROR: FICHERO INEXISTENTE");
+                        } 
+                        historialPartida.setText("\n\n" + todoHistorial);
+                    } else {
+                        JOptionPane.showMessageDialog(null,"ANTES DEBES TERMINAR LA PARTTIDA EN CURSO");
+                    }
+                }
+                    
+                case "INFORMACIÓN" -> {
+                    if(partidaFinalizada == true){
+                        local.show(panelInterfaces, "PANEL 2");
+                    } else {
+                        JOptionPane.showMessageDialog(null,"ANTES DEBES TERMINAR LA PARTTIDA EN CURSO");
+                    }                    
+                }
+                
+                case "SALIR" -> {
+                    System.exit(0);
+                }
+            }
+        }
+    }
+    
+    class GestorTiempo implements ActionListener{ 
+        @Override
+        public void actionPerformed(ActionEvent evento) {
+            CardLayout local = (CardLayout)(panelInterfaces.getLayout());
+            if(evento.getSource()==cronometro) {
+                int valor=barraTemporal.getValue();
+                if(valor<valorMaximo){
+                    barraTemporal.setValue(++valor);
+                } else{
+                    cronometro.restart();
+                    cronometro.stop();
+                    // después de que acabe el tiempo escribimos en el fichero de historial
+                    Historial historial = new Historial();
+                    //HistorialObjetoFicherosEscritura fichero;
+                    FicheroElementoInOut fichero;
+                    try{
+                        fichero = new FicheroElementoInOut("partidasTetrisUIB.dat");
+                        historial.lectura(nombre_jugador, tiempoPartida, puntuacion);
+                        fichero.escritura(historial);
+                        //cierre del enlace con el fichero
+                        fichero.cierre();
+                    }catch (Exception error) {
+                        System.err.println("ERROR EN LA CREACIÓN DEL FICHERO");
+                    }
+                    JOptionPane.showMessageDialog(null,"HAS OBTENIDO UNA PUNTUACIÓN DE " + puntuacion);
+                    barraTemporal.setValue(0);
+                    local.show(panelInterfaces, "PANEL 0");
+                    puntuacion=0;
+                    nombre_jugador = "";
+                    partidaFinalizada = true;
+                }
+            }
+        }
+    }     
+    
+    private void eventosTablero(){
+        // añadimos un MouseListener al tablero
+        tablero.addMouseListener(new MouseListener(){
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // obtenemos las coordenadas de clic del raton
+                int x=e.getX();                  
+                int y=e.getY();
+
+                // comprobamos si el clic se ha hecho dentro de la zona 
+                if ((!DESPLAZAMIENTO)&&(x>=COORDENADA_X_INICIAL)
+                                   &&(x<=COORDENADA_X_INICIAL+90)
+                                   &&(y>=COORDENADA_Y_INICIAL)
+                                   &&(y<=COORDENADA_Y_INICIAL+90)) {
+                    DESPLAZAMIENTO=true;
+                    tablero.setInsercion(true);               
+                    tablero.repaint(); 
+                }else {
+                    tablero.setInsercion(false);
+                    tablero.repaint();
+                      }       
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // obtenemos las coordenadas de clic del raton
+                int x=e.getX();                  
+                int y=e.getY(); 
+                int x2=(x+tablero.getDesfaseX())/30;
+                int y2=(y+tablero.getDesfaseY())/30;
+                
+                // comprobamos si la ficha se ha soltado en una posición válida del tablero
+                if ((DESPLAZAMIENTO) && x2>=-1 && x2<=18 && y2>=-1 && y2<=17){
+                    if(x < 30){
+                        x2 = x2-1;
+                    }
+                    if(y < 40){
+                        y2 = y2-1;
+                    }
+                    // matriz basada en las coordenadas
+                    Casilla [][] matriz = tablero.extraerMatriz(x2,y2);
+                    // comprobamso si la matriz es compatible con el tablero
+                    if(tablero.compatibilidad(matriz)){
+                        for (int fila=0; fila <3; fila++) {
+                            for (int columna=0;columna<3;columna++) {
+                                if(tablero.getEstadoFiguras(fila, columna)==true){
+                                    // marcamos la posicion en el tablero como ocupada
+                                    tablero.setOcupadaTablero((fila+y2)+2, (columna+x2)+1);
+                                }
+                            }          
+                        }  
+                        tablero.cambiarForma();
+                    }
+                        
+                }
+                // verificamos las filas y las columnas después de soltar la ficha
+                verificarFilasColumnas();
+                tablero.setCoordX(COORDENADA_X_INICIAL);
+                tablero.setCoordY(COORDENADA_Y_INICIAL);
+                tablero.setInsercion(false);
+                tablero.repaint();
+                DESPLAZAMIENTO=false;
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+        
+        });
+          
+        // añadimos un MouseMotionListener al tablero   
+        tablero.addMouseMotionListener(new MouseMotionListener(){
+            @Override
+            public void mouseDragged(MouseEvent e) {
+            // si hay desplazamiento actualizamos las coordenadas del ratón y repintamos el tablero
+            if (DESPLAZAMIENTO) {
+                tablero.setCoordX(e.getX());
+                tablero.setCoordY(e.getY());
+                tablero.repaint();
+            }
+        }
+
+            @Override
+           public void mouseMoved(MouseEvent e) {}
+        
+        });
+    }
+    
+    private void verificarFilasColumnas(){
+        // verificamos des de la fila 2 hasta la penultima
+        for (int fila = 2; fila < tablero.getNumCasillas()-2; fila++) {
+            boolean filaCompleta = true;
+            // comprobamos si todas las casillas de la fila están ocupadas
+            for (int columna = 2; columna < tablero.getNumCasillas()-2; columna++) {
+                if (!tablero.getEstadoCasilla(fila, columna)) {
+                    filaCompleta = false;
+                    break;
+                }
+            }
+            
+            // si todas están ocupadas actualizamos la puntuacion y vaciamos las casillas
+            if (filaCompleta) {
+                if(formaEliminada>=0){
+                    puntuacion=puntuacion+formaEliminada*18;
+                }else {
+                    puntuacion=puntuacion-formaEliminada*18;
+                }
+                    puntuacion2.setText(String.valueOf(puntuacion) + " puntos   ");
+                for (int columna = 2; columna < tablero.getNumCasillas()-2; columna++) {
+                    tablero.setLiberadaTablero(fila, columna);
+                }
+            }
+        }
+
+        // Verificar columnas igual que hemos hecho con las filas
+        for (int columna = 2; columna < tablero.getNumCasillas()-2; columna++) {
+            boolean columnaCompleta = true;
+            for (int fila = 2; fila < 20; fila++) {
+                if (!tablero.getEstadoCasilla(fila, columna)) {
+                    columnaCompleta = false;
+                    break;
+                }
+            }
+            if (columnaCompleta) {
+                if(formaEliminada>=0){
+                    puntuacion=puntuacion+formaEliminada*18;
+                }else{
+                    puntuacion=puntuacion-formaEliminada*18;
+                }
+                puntuacion2.setText(String.valueOf(puntuacion) + " puntos   ");
+                for (int fila = 2; fila <  tablero.getNumCasillas()-2; fila++) {
+                    tablero.setLiberadaTablero(fila, columna);
+                }
+            }
+        }   
+    }
+}
